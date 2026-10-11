@@ -42,10 +42,17 @@ async function initDB() {
                 id SERIAL PRIMARY KEY,
                 telegram_id BIGINT,
                 amount_rub INTEGER,
+                bank TEXT,
+                card TEXT,
+                name TEXT,
                 status TEXT DEFAULT 'pending',
                 created_at TIMESTAMP DEFAULT NOW()
             );
         `);
+        // Дополнительные колонки, если таблица создана раньше
+        await db.query(`ALTER TABLE withdrawals ADD COLUMN IF NOT EXISTS bank TEXT;`);
+        await db.query(`ALTER TABLE withdrawals ADD COLUMN IF NOT EXISTS card TEXT;`);
+        await db.query(`ALTER TABLE withdrawals ADD COLUMN IF NOT EXISTS name TEXT;`);
         console.log('✅ Таблицы готовы');
     } catch (err) {
         console.error('Ошибка таблиц:', err.message);
@@ -62,6 +69,7 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
 });
 
+// ===== БАЛАНС =====
 app.get('/api/balance/:userId', async (req, res) => {
     if (!db) return res.json({ balance: 10000 });
     const { userId } = req.params;
@@ -77,6 +85,7 @@ app.get('/api/balance/:userId', async (req, res) => {
     }
 });
 
+// ===== СТАВКА =====
 app.post('/api/bet', async (req, res) => {
     if (!db) return res.status(500).json({ error: 'БД не подключена' });
     const { userId, amount } = req.body;
@@ -92,6 +101,7 @@ app.post('/api/bet', async (req, res) => {
     }
 });
 
+// ===== ВЫИГРЫШ =====
 app.post('/api/win', async (req, res) => {
     if (!db) return res.status(500).json({ error: 'БД не подключена' });
     const { userId, amount } = req.body;
@@ -104,6 +114,7 @@ app.post('/api/win', async (req, res) => {
     }
 });
 
+// ===== ПОПОЛНЕНИЕ =====
 app.post('/api/deposit', async (req, res) => {
     if (!cryptoPay) return res.status(500).json({ error: 'Crypto Pay не настроен' });
     if (!db) return res.status(500).json({ error: 'БД не подключена' });
@@ -131,26 +142,34 @@ app.post('/api/deposit', async (req, res) => {
     }
 });
 
+// ===== ВЫВОД =====
 app.post('/api/withdraw', async (req, res) => {
     if (!db) return res.status(500).json({ error: 'БД не подключена' });
-    const { userId, amountRub } = req.body;
+    const { userId, amountRub, bank, card, name } = req.body;
 
     try {
         const balanceRes = await db.query('SELECT balance FROM users WHERE telegram_id = $1', [userId]);
         if (balanceRes.rows.length === 0 || balanceRes.rows[0].balance < amountRub) {
             return res.status(400).json({ error: 'Недостаточно средств' });
         }
+
         await db.query('UPDATE users SET balance = balance - $1 WHERE telegram_id = $2', [amountRub, userId]);
+
         await db.query(
-            'INSERT INTO withdrawals (telegram_id, amount_rub, status) VALUES ($1, $2, $3)',
-            [userId, amountRub, 'pending']
+            `INSERT INTO withdrawals (telegram_id, amount_rub, bank, card, name, status) 
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [userId, amountRub, bank || 'не указан', card || 'не указан', name || 'не указан', 'pending']
         );
-        res.json({ success: true, message: 'Заявка создана' });
+
+        console.log(`📤 Заявка на вывод: ${userId} | ${amountRub} ₽ | ${bank} | ${card} | ${name}`);
+        res.json({ success: true });
     } catch (err) {
+        console.error('Ошибка вывода:', err);
         res.status(500).json({ error: err.message });
     }
 });
 
+// ===== ВЕБХУК CRYPTO PAY =====
 app.post('/crypto/webhook', async (req, res) => {
     if (!db) return res.sendStatus(200);
     const { update_type, payload } = req.body;
