@@ -50,6 +50,8 @@ async function initDB() {
                 created_at TIMESTAMP DEFAULT NOW()
             );
         `);
+        // ЭТА СТРОКА ИСПРАВИТ ОШИБКУ
+        await db.query(`ALTER TABLE withdrawals ADD COLUMN IF NOT EXISTS amount INTEGER;`);
 
         await db.query(`
             CREATE TABLE IF NOT EXISTS settings (
