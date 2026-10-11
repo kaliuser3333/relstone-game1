@@ -64,8 +64,8 @@ async function initDB() {
             'admin.always_win': 'off',
             'mines.multiplier': '1.3',
             'mines.max_mines': '24',
-            'mines.min_bet': '10',
-            'hl.min_bet': '10',
+            'mines.min_bet': '1',
+            'hl.min_bet': '1',
             'global.min_deposit': '50',
             'global.min_withdraw': '100'
         };
@@ -76,7 +76,6 @@ async function initDB() {
     } catch (err) { console.error('Ошибка таблиц:', err.message); }
 }
 
-// ===== НАСТРОЙКИ =====
 async function getSetting(key) {
     if (!db) return null;
     const r = await db.query('SELECT value FROM settings WHERE key = $1', [key]);
@@ -93,7 +92,6 @@ function isAdmin(userId) { return ADMIN_IDS.includes(String(userId)); }
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 
-// ===== БАЛАНС =====
 app.get('/api/balance/:userId', async (req, res) => {
     if (!db) return res.json({ balance: 10000 });
     const { userId } = req.params;
@@ -118,7 +116,6 @@ app.get('/api/settings', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ===== СТАВКА / ВЫИГРЫШ =====
 app.post('/api/bet', async (req, res) => {
     if (!db) return res.status(500).json({ error: 'БД не подключена' });
     const { userId, amount } = req.body;
@@ -141,20 +138,17 @@ app.post('/api/win', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ===== ПОПОЛНЕНИЕ ЗА STARS =====
-app.post('/api/deposit-stars', async (req, res) => {
+app.post('/api/create-invoice-link', async (req, res) => {
     if (!db) return res.status(500).json({ error: 'БД не подключена' });
     const { userId, amount } = req.body;
 
     if (!BOT_TOKEN) return res.status(500).json({ error: 'BOT_TOKEN не задан' });
 
     try {
-        // Создаём счёт в Telegram Stars
-        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendInvoice`, {
+        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/createInvoiceLink`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                chat_id: userId,
                 title: 'Пополнение баланса',
                 description: `Пополнение на ${amount} Stars`,
                 payload: JSON.stringify({ userId, amount }),
@@ -169,16 +163,17 @@ app.post('/api/deposit-stars', async (req, res) => {
                 'INSERT INTO deposits (telegram_id, amount, status) VALUES ($1, $2, $3)',
                 [userId, amount, 'pending']
             );
-            res.json({ success: true, message: 'Счёт отправлен в чат' });
+            res.json({ invoiceLink: result.result });
         } else {
-            res.status(500).json({ error: result.description || 'Ошибка отправки счёта' });
+            console.error('Telegram API error:', result);
+            res.status(500).json({ error: result.description || 'Ошибка создания ссылки' });
         }
     } catch (err) {
+        console.error(err);
         res.status(500).json({ error: err.message });
     }
 });
 
-// ===== ВЫВОД ЗА STARS (ЗАЯВКА) =====
 app.post('/api/withdraw-stars', async (req, res) => {
     if (!db) return res.status(500).json({ error: 'БД не подключена' });
     const { userId, amount } = req.body;
@@ -189,10 +184,7 @@ app.post('/api/withdraw-stars', async (req, res) => {
             return res.status(400).json({ error: 'Недостаточно средств' });
         }
 
-        // Списываем баланс сразу
         await db.query('UPDATE users SET balance = balance - $1 WHERE telegram_id = $2', [amount, userId]);
-
-        // Создаём заявку
         await db.query(
             'INSERT INTO withdrawals (telegram_id, amount, status) VALUES ($1, $2, $3)',
             [userId, amount, 'pending']
@@ -205,9 +197,21 @@ app.post('/api/withdraw-stars', async (req, res) => {
     }
 });
 
-// ===== ВЕБХУК ОТ TELEGRAM (УСПЕШНАЯ ОПЛАТА) =====
 app.post('/telegram/webhook', async (req, res) => {
     const update = req.body;
+
+    if (update.pre_checkout_query) {
+        try {
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerPreCheckoutQuery`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pre_checkout_query_id: update.pre_checkout_query.id,
+                    ok: true
+                })
+            });
+        } catch (err) { console.error('pre_checkout error:', err); }
+    }
 
     if (update.message?.successful_payment) {
         const payment = update.message.successful_payment;
@@ -222,16 +226,13 @@ app.post('/telegram/webhook', async (req, res) => {
             );
             console.log(`✅ Stars: ${userId} пополнил на ${amount} ⭐`);
         } catch (err) {
-            console.error('Ошибка вебхука:', err);
+            console.error('Ошибка начисления:', err);
         }
     }
 
     res.sendStatus(200);
 });
 
-// =========================================================
-// ===== АДМИНКА ===========================================
-// =========================================================
 app.get('/api/admin/check/:userId', (req, res) => {
     res.json({ isAdmin: isAdmin(req.params.userId) });
 });
