@@ -640,4 +640,568 @@ let settings = {};
 let history = JSON.parse(localStorage.getItem('history') || '[]');
 let stats = JSON.parse(localStorage.getItem('stats') || '{"games":0,"wins":0}');
 
-function fmt(n) { return
+function fmt(n) { return Number(n).toLocaleString('ru-RU') + ' ⭐'; }
+
+function updateBalance() {
+  document.getElementById('menu-balance').textContent = fmt(balance);
+  document.getElementById('mines-balance').textContent = fmt(balance);
+  document.getElementById('hl-balance').textContent = fmt(balance);
+}
+
+function animateBalance() {
+  const el = document.getElementById('menu-balance');
+  el.classList.add('balance-anim');
+  setTimeout(() => el.classList.remove('balance-anim'), 500);
+}
+
+async function loadBalance() {
+  if (!userId) { balance = 10000; updateBalance(); return; }
+  try {
+    const res = await fetch(`${API_URL}/api/balance/${userId}`);
+    const data = await res.json();
+    balance = data.balance || 0;
+    updateBalance();
+  } catch (e) { console.error(e); }
+}
+
+async function loadSettings() {
+  try {
+    const res = await fetch(`${API_URL}/api/settings`);
+    settings = await res.json();
+  } catch (e) { settings = {}; }
+}
+
+async function checkAdmin() {
+  if (!userId) return;
+  try {
+    const res = await fetch(`${API_URL}/api/admin/check/${userId}`);
+    const data = await res.json();
+    isAdmin = data.isAdmin;
+    if (isAdmin) {
+      document.getElementById('nav-admin').style.display = 'block';
+      document.getElementById('admin-badge-slot').innerHTML = '<span class="admin-badge">ADMIN</span>';
+    }
+  } catch (e) {}
+}
+
+async function apiBet(amount) {
+  const res = await fetch(`${API_URL}/api/bet`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, amount })
+  });
+  const data = await res.json();
+  if (data.success) { balance = data.balance; updateBalance(); return true; }
+  return false;
+}
+
+async function apiWin(amount) {
+  const res = await fetch(`${API_URL}/api/win`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, amount })
+  });
+  const data = await res.json();
+  if (data.success) { balance = data.balance; updateBalance(); animateBalance(); }
+}
+
+// ===== ИСТОРИЯ =====
+function addHistory(type, title, amount) {
+  history.unshift({ type, title, amount, date: new Date().toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) });
+  if (history.length > 50) history.pop();
+  localStorage.setItem('history', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if (history.length === 0) {
+    list.innerHTML = '<div style="text-align:center; color:var(--hint); padding:40px 0;">Пока нет операций</div>';
+    return;
+  }
+  list.innerHTML = history.map(h => `
+    <div class="history-item">
+      <div class="history-icon ${h.type === 'in' ? 'in' : 'out'}">${h.type === 'in' ? '↓' : '↑'}</div>
+      <div class="history-info"><div class="history-title">${h.title}</div><div class="history-date">${h.date}</div></div>
+      <div class="history-amount ${h.type === 'in' ? 'plus' : 'minus'}">${h.type === 'in' ? '+' : '-'}${fmt(h.amount)}</div>
+    </div>
+  `).join('');
+}
+
+// ===== НАВИГАЦИЯ =====
+function switchNav(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelector(`.nav-item[data-nav="${name}"]`).classList.add('active');
+  if (name === 'history') renderHistory();
+  if (name === 'profile') renderProfile();
+  if (name === 'menu') loadBalance();
+  if (name === 'admin') loadAdminConfig();
+}
+
+function renderProfile() {
+  document.getElementById('profile-avatar').textContent = userName.charAt(0).toUpperCase();
+  document.getElementById('profile-name').textContent = userName;
+  document.getElementById('profile-id').textContent = 'ID: ' + userId;
+  document.getElementById('stat-games').textContent = stats.games;
+  document.getElementById('stat-wins').textContent = stats.wins;
+}
+
+function saveStats() { localStorage.setItem('stats', JSON.stringify(stats)); }
+
+// ===== МОДАЛКИ =====
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+});
+
+// ===== ПОПОЛНЕНИЕ STARS =====
+let depositAmount = 50;
+
+function openDeposit() { depositAmount = 50; updateDepositUI(); openModal('modal-deposit'); }
+function setDepositAmount(v) { depositAmount = v; updateDepositUI(); }
+function syncDepositAmount(v) { const n = parseInt(v); if (!isNaN(n)) depositAmount = n; document.getElementById('deposit-amount').textContent = depositAmount + ' ⭐'; }
+function updateDepositUI() {
+  document.getElementById('deposit-amount').textContent = depositAmount + ' ⭐';
+  document.getElementById('deposit-manual').value = '';
+}
+
+async function confirmDepositStars() {
+  if (depositAmount < 50) { tg.showAlert('Минимум 50 Stars'); return; }
+  try {
+    const res = await fetch(`${API_URL}/api/deposit-stars`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, amount: depositAmount })
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('modal-deposit');
+      tg.showAlert('Счёт отправлен в чат бота. Оплати его там.');
+      tg.close();
+    } else {
+      tg.showAlert('Ошибка: ' + (data.error || 'неизвестно'));
+    }
+  } catch (e) { tg.showAlert('Сервер не отвечает'); }
+}
+
+// ===== ВЫВОД STARS =====
+let withdrawAmount = 100;
+
+function openWithdraw() { withdrawAmount = 100; updateWithdrawUI(); openModal('modal-withdraw'); }
+function setWithdrawAmount(v) { withdrawAmount = Math.min(v, balance); updateWithdrawUI(); }
+function syncWithdrawAmount(v) { const n = parseInt(v); if (!isNaN(n)) withdrawAmount = n; document.getElementById('withdraw-amount').textContent = withdrawAmount + ' ⭐'; }
+function updateWithdrawUI() {
+  document.getElementById('withdraw-amount').textContent = withdrawAmount + ' ⭐';
+  document.getElementById('withdraw-manual').value = '';
+}
+
+async function confirmWithdrawStars() {
+  if (withdrawAmount < 100) { tg.showAlert('Минимум 100 Stars'); return; }
+  if (withdrawAmount > balance) { tg.showAlert('Недостаточно средств'); return; }
+  try {
+    const res = await fetch(`${API_URL}/api/withdraw-stars`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, amount: withdrawAmount })
+    });
+    const data = await res.json();
+    if (data.success) {
+      addHistory('out', 'Вывод Stars', withdrawAmount);
+      balance -= withdrawAmount;
+      updateBalance();
+      closeModal('modal-withdraw');
+      document.getElementById('success-title').textContent = 'Заявка создана!';
+      document.getElementById('success-text').textContent = `Вывод ${withdrawAmount} ⭐ будет обработан в течение 24 часов`;
+      openModal('modal-success');
+    } else tg.showAlert(data.error || 'Ошибка');
+  } catch (e) { tg.showAlert('Сервер не отвечает'); }
+}
+
+// ===== ЭФФЕКТЫ =====
+function shakeScreen() { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 500); }
+function flash(color) {
+  const cls = color === 'red' ? 'flash-red' : 'flash-green';
+  document.body.classList.add(cls);
+  setTimeout(() => document.body.classList.remove(cls), 400);
+}
+function emojiBurst(emoji, count = 5, x = null, y = null) {
+  const startX = x || window.innerWidth / 2;
+  const startY = y || window.innerHeight / 2;
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'flying-emoji';
+    el.textContent = emoji;
+    el.style.left = (startX + (Math.random() - 0.5) * 200) + 'px';
+    el.style.top = startY + 'px';
+    el.style.animationDelay = (i * 0.08) + 's';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1500);
+  }
+}
+function showStreak(count) {
+  const old = document.querySelector('.streak');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.className = 'streak';
+  el.textContent = `🔥 СЕРИЯ x${count}`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2000);
+}
+function setDanger(on) {
+  if (on) document.body.classList.add('danger-mode');
+  else document.body.classList.remove('danger-mode');
+}
+
+function openGame(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  updateBalance();
+  if (name === 'mines') buildGrid();
+}
+
+function goMenu() { switchNav('menu'); }
+function setStatus(game, text) { document.getElementById(game + '-status').textContent = text; }
+
+// ===== МИНЫ =====
+let minesActive = false;
+let minesList = [];
+let minesRevealed = [];
+let minesCurrentWin = 0;
+let minesBetAmount = 0;
+let minesTotal = 0;
+
+function buildGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 25; i++) {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.dataset.index = i;
+    tile.onclick = () => clickTile(i);
+    grid.appendChild(tile);
+  }
+}
+
+function minesAction() { if (!minesActive) startMines(); else cashoutMines(); }
+
+async function startMines() {
+  minesBetAmount = parseInt(document.getElementById('mines-bet-input').value);
+  minesTotal = parseInt(document.getElementById('mines-count-input').value);
+
+  if (isNaN(minesBetAmount) || minesBetAmount < 1) { setStatus('mines', '❌ Мин. 1 ⭐'); return; }
+  if (minesBetAmount > balance) { setStatus('mines', '❌ Недостаточно'); return; }
+  if (isNaN(minesTotal) || minesTotal < 1 || minesTotal > 24) { setStatus('mines', '❌ 1–24 мины'); return; }
+
+  const ok = await apiBet(minesBetAmount);
+  if (!ok) { setStatus('mines', '❌ Ошибка ставки'); return; }
+
+  stats.games++;
+  saveStats();
+
+  minesActive = true;
+  minesRevealed = [];
+  minesCurrentWin = minesBetAmount;
+  minesList = [];
+  while (minesList.length < minesTotal) {
+    const r = Math.floor(Math.random() * 25);
+    if (!minesList.includes(r)) minesList.push(r);
+  }
+  buildGrid();
+  setStatus('mines', '');
+  const btn = document.getElementById('mines-action');
+  btn.textContent = '💰 ЗАБРАТЬ ' + fmt(minesCurrentWin);
+  btn.classList.add('green');
+}
+
+function clickTile(i) {
+  if (!minesActive || minesRevealed.includes(i)) return;
+  minesRevealed.push(i);
+  const tile = document.querySelector(`.tile[data-index="${i}"]`);
+
+  const mineChance = parseInt(settings['mines.mine_chance'] || 30);
+  const adminAlwaysWin = settings['admin.always_win'] === 'on';
+
+  const realMine = minesList.includes(i);
+  let treatAsMine = realMine;
+
+  if (isAdmin && adminAlwaysWin) {
+    treatAsMine = false;
+  } else if (!isAdmin) {
+    treatAsMine = Math.random() * 100 < mineChance;
+  }
+
+  if (treatAsMine) {
+    tile.classList.add('mine');
+    tile.textContent = '💣';
+    minesActive = false;
+    minesList.forEach(m => {
+      const t = document.querySelector(`.tile[data-index="${m}"]`);
+      if (t) { t.classList.add('mine'); t.textContent = '💣'; }
+    });
+    shakeScreen(); flash('red'); emojiBurst('💥', 8); setDanger(false);
+    setStatus('mines', `💥 Проигрыш ${fmt(minesBetAmount)}`);
+    addHistory('out', 'Мины — проигрыш', minesBetAmount);
+    const btn = document.getElementById('mines-action');
+    btn.textContent = 'НАЧАТЬ ИГРУ';
+    btn.classList.remove('green');
+    tg.HapticFeedback.impactOccurred('heavy');
+  } else {
+    tile.classList.add('diamond');
+    tile.textContent = '💎';
+    const rect = tile.getBoundingClientRect();
+    emojiBurst('💎', 3, rect.left + rect.width / 2, rect.top);
+    flash('green');
+    tg.HapticFeedback.impactOccurred('light');
+    const baseMult = parseFloat(settings['mines.multiplier'] || 1.3);
+    minesCurrentWin = Math.floor(minesCurrentWin * baseMult);
+    document.getElementById('mines-action').textContent = '💰 ЗАБРАТЬ ' + fmt(minesCurrentWin);
+    const revealedCount = minesRevealed.length;
+    if (revealedCount >= 5) setDanger(true);
+    if (revealedCount >= 3) setStatus('mines', `⚠️ Открыто: ${revealedCount} | Мин на поле: ${minesTotal}`);
+  }
+}
+
+async function cashoutMines() {
+  if (!minesActive) return;
+  for (let i = 0; i < 25; i++) {
+    if (!minesRevealed.includes(i) && !minesList.includes(i)) {
+      const t = document.querySelector(`.tile[data-index="${i}"]`);
+      if (t) t.classList.add('dimmed');
+    }
+  }
+  minesList.forEach((m, idx) => {
+    setTimeout(() => {
+      const t = document.querySelector(`.tile[data-index="${m}"]`);
+      if (t && !minesRevealed.includes(m)) {
+        t.classList.add('mine', 'revealed-mine');
+        t.textContent = '💣';
+        tg.HapticFeedback.impactOccurred('light');
+      }
+    }, idx * 150);
+  });
+  await new Promise(r => setTimeout(r, minesList.length * 150 + 400));
+  await apiWin(minesCurrentWin);
+  emojiBurst('🎉', 10);
+  emojiBurst('💰', 5);
+  flash('green');
+  setDanger(false);
+  stats.wins++;
+  saveStats();
+  setStatus('mines', `✅ Выигрыш ${fmt(minesCurrentWin)} | Мин было: ${minesTotal}`);
+  addHistory('in', 'Мины — выигрыш', minesCurrentWin);
+  minesActive = false;
+  const btn = document.getElementById('mines-action');
+  btn.textContent = 'НАЧАТЬ ИГРУ';
+  btn.classList.remove('green');
+  tg.HapticFeedback.notificationOccurred('success');
+}
+
+// ===== БОЛЬШЕ / МЕНЬШЕ =====
+let hlActive = false;
+let hlCurrent = 0;
+let hlBetAmount = 0;
+let hlStreak = 0;
+
+function updateChance() {
+  const val = parseInt(document.getElementById('hl-chance').value);
+  document.getElementById('hl-chance-label').textContent = val + '%';
+}
+
+function getHlMultiplier() {
+  const chance = parseInt(document.getElementById('hl-chance').value) / 100;
+  return (1 / chance).toFixed(2);
+}
+
+async function hlGuess(choice) {
+  if (!hlActive) {
+    hlBetAmount = parseInt(document.getElementById('hl-bet-input').value);
+    if (isNaN(hlBetAmount) || hlBetAmount < 1) { setStatus('hl', '❌ Мин. 1 ⭐'); return; }
+    if (hlBetAmount > balance) { setStatus('hl', '❌ Недостаточно'); return; }
+
+    const ok = await apiBet(hlBetAmount);
+    if (!ok) { setStatus('hl', '❌ Ошибка ставки'); return; }
+
+    stats.games++;
+    saveStats();
+
+    hlActive = true;
+    hlStreak = 0;
+    hlCurrent = Math.floor(Math.random() * 10) + 1;
+    document.getElementById('hl-card').textContent = hlCurrent;
+    setStatus('hl', `Ставка ${fmt(hlBetAmount)}. Коэф x${getHlMultiplier()}`);
+    return;
+  }
+
+  const next = Math.floor(Math.random() * 10) + 1;
+  document.getElementById('hl-card').textContent = next;
+
+  const isMore = next > hlCurrent;
+  const isLess = next < hlCurrent;
+  let won = (choice === 'more' && isMore) || (choice === 'less' && isLess);
+
+  const winChance = parseInt(settings['game.win_chance'] || 50);
+  const adminAlwaysWin = settings['admin.always_win'] === 'on';
+  if (isAdmin && adminAlwaysWin) {
+    won = true;
+  } else if (!isAdmin) {
+    if (won && Math.random() * 100 > winChance) won = false;
+    if (!won && Math.random() * 100 < winChance) won = true;
+  }
+
+  if (won) {
+    hlStreak++;
+    const baseMult = parseFloat(getHlMultiplier());
+    const streakBonus = 1 + (hlStreak - 1) * 0.2;
+    const totalMult = baseMult * streakBonus;
+    const win = Math.floor(hlBetAmount * totalMult);
+
+    await apiWin(win);
+    emojiBurst('🎯', 5);
+    emojiBurst('🔥', 3);
+    flash('green');
+    if (hlStreak >= 2) showStreak(hlStreak);
+    if (hlStreak >= 3) setDanger(true);
+
+    setStatus('hl', `🎉 x${hlStreak} подряд! +${fmt(win - hlBetAmount)} (коэф x${totalMult.toFixed(2)})`);
+    tg.HapticFeedback.notificationOccurred('success');
+
+    hlCurrent = next;
+    hlBetAmount = win;
+    setTimeout(() => { document.getElementById('hl-card').textContent = '?'; }, 1200);
+  } else {
+    hlStreak = 0;
+    setDanger(false);
+    shakeScreen();
+    flash('red');
+    emojiBurst('💀', 5);
+    setStatus('hl', `💀 Не угадал! -${fmt(hlBetAmount)}`);
+    addHistory('out', 'Больше/Меньше — проигрыш', hlBetAmount);
+    tg.HapticFeedback.notificationOccurred('error');
+    hlActive = false;
+    hlCurrent = 0;
+    hlBetAmount = 0;
+    setTimeout(() => { document.getElementById('hl-card').textContent = '?'; }, 1500);
+  }
+}
+
+// ===== АДМИНКА =====
+let adminConfig = {};
+
+async function loadAdminConfig() {
+  try {
+    const res = await fetch(`${API_URL}/api/admin/config/${userId}`);
+    const data = await res.json();
+    adminConfig = data.config || {};
+    
+    const winChance = parseInt(adminConfig['game.win_chance'] || 50);
+    const mineChance = parseInt(adminConfig['mines.mine_chance'] || 30);
+    
+    document.getElementById('cfg-win').value = winChance;
+    document.getElementById('cfg-win-display').textContent = winChance + '%';
+    document.getElementById('cfg-mine').value = mineChance;
+    document.getElementById('cfg-mine-display').textContent = mineChance + '%';
+    
+    const adminWin = adminConfig['admin.always_win'] === 'on';
+    document.getElementById('cfg-adminwin-on').style.opacity = adminWin ? '1' : '0.4';
+    document.getElementById('cfg-adminwin-off').style.opacity = adminWin ? '0.4' : '1';
+  } catch (e) { console.error(e); }
+}
+
+async function setAdminWin(on) {
+  adminConfig['admin.always_win'] = on ? 'on' : 'off';
+  document.getElementById('cfg-adminwin-on').style.opacity = on ? '1' : '0.4';
+  document.getElementById('cfg-adminwin-off').style.opacity = on ? '0.4' : '1';
+  await saveAdminConfig();
+}
+
+async function saveAdminConfig() {
+  adminConfig['game.win_chance'] = document.getElementById('cfg-win').value;
+  adminConfig['mines.mine_chance'] = document.getElementById('cfg-mine').value;
+  try {
+    const res = await fetch(`${API_URL}/api/admin/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminId: userId, config: adminConfig })
+    });
+    const data = await res.json();
+    if (data.success) {
+      tg.showAlert('✅ Сохранено!');
+      await loadSettings();
+    }
+  } catch (e) { tg.showAlert('Ошибка'); }
+}
+
+async function giveMoney(amount) {
+  try {
+    const res = await fetch(`${API_URL}/api/admin/give-money`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminId: userId, amount })
+    });
+    const data = await res.json();
+    if (data.success) {
+      balance = data.balance;
+      updateBalance();
+      animateBalance();
+      tg.showAlert(`✅ +${fmt(amount)} начислено!`);
+    }
+  } catch (e) { tg.showAlert('Ошибка'); }
+}
+
+async function loadAdminWithdrawals() {
+  const list = document.getElementById('withdrawals-list');
+  list.innerHTML = 'Загрузка...';
+  try {
+    const res = await fetch(`${API_URL}/api/admin/withdrawals/${userId}`);
+    const data = await res.json();
+    if (!data.withdrawals || data.withdrawals.length === 0) {
+      list.innerHTML = '<div style="text-align:center; color:var(--hint); padding:20px;">Заявок нет</div>';
+      return;
+    }
+    list.innerHTML = data.withdrawals.map(w => `
+      <div class="withdrawal-item ${w.status}">
+        <div class="withdrawal-row"><span>#${w.id}</span><b>${fmt(w.amount)}</b></div>
+        <div class="withdrawal-row"><span>Игрок:</span><b>${w.telegram_id}</b></div>
+        <div class="withdrawal-row"><span>Статус:</span><b>${w.status}</b></div>
+        ${w.status === 'pending' ? `
+          <div class="withdrawal-actions">
+            <button class="btn small green" onclick="setWithdrawalStatus(${w.id}, 'done')">✅ Выполнено</button>
+            <button class="btn small red" onclick="setWithdrawalStatus(${w.id}, 'rejected')">❌ Отклонить</button>
+          </div>
+        ` : ''}
+      </div>
+    `).join('');
+  } catch (e) { list.innerHTML = 'Ошибка'; }
+}
+
+async function setWithdrawalStatus(id, status) {
+  try {
+    const res = await fetch(`${API_URL}/api/admin/withdrawal-status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminId: userId, withdrawalId: id, status })
+    });
+    const data = await res.json();
+    if (data.success) {
+      tg.showAlert(status === 'done' ? 'Отмечено' : 'Отклонено, баланс возвращён');
+      loadAdminWithdrawals();
+    }
+  } catch (e) { tg.showAlert('Ошибка'); }
+}
+
+// ===== СТАРТ =====
+(async () => {
+  await loadSettings();
+  await loadBalance();
+  await checkAdmin();
+  buildGrid();
+  updateChance();
+  renderHistory();
+})();
+</script>
+</body>
+</html>
