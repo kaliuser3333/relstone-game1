@@ -662,4 +662,137 @@ function clickTile(i) {
     tg.HapticFeedback.impactOccurred('light');
     const multiplier = 1 + (minesTotal * 0.1);
     minesCurrentWin = Math.floor(minesCurrentWin * multiplier);
-    document.getElementById('mines-action').
+    document.getElementById('mines-action').textContent = '💰 ЗАБРАТЬ ' + fmt(minesCurrentWin);
+    const revealedCount = minesRevealed.length;
+    if (revealedCount >= 5) setDanger(true);
+    if (revealedCount >= 3) {
+      setStatus('mines', `⚠️ Открыто: ${revealedCount} | Мин на поле: ${minesTotal}`);
+    }
+  }
+}
+
+async function cashoutMines() {
+  if (!minesActive) return;
+
+  // Затемняем неоткрытые клетки
+  for (let i = 0; i < 25; i++) {
+    if (!minesRevealed.includes(i) && !minesList.includes(i)) {
+      const t = document.querySelector(`.tile[data-index="${i}"]`);
+      if (t) t.classList.add('dimmed');
+    }
+  }
+
+  // Показываем мины по одной
+  minesList.forEach((m, idx) => {
+    setTimeout(() => {
+      const t = document.querySelector(`.tile[data-index="${m}"]`);
+      if (t && !minesRevealed.includes(m)) {
+        t.classList.add('mine', 'revealed-mine');
+        t.textContent = '💣';
+        tg.HapticFeedback.impactOccurred('light');
+      }
+    }, idx * 150);
+  });
+
+  // Ждём, пока покажутся все мины
+  await new Promise(resolve => setTimeout(resolve, minesList.length * 150 + 400));
+
+  await apiWin(minesCurrentWin);
+  emojiBurst('🎉', 10);
+  emojiBurst('💰', 5);
+  flash('green');
+  setDanger(false);
+
+  setStatus('mines', `✅ Выигрыш ${fmt(minesCurrentWin)} | Мин было: ${minesTotal}`);
+  minesActive = false;
+  const btn = document.getElementById('mines-action');
+  btn.textContent = 'НАЧАТЬ ИГРУ';
+  btn.classList.remove('green');
+  tg.HapticFeedback.notificationOccurred('success');
+}
+
+// ===== БОЛЬШЕ / МЕНЬШЕ =====
+let hlActive = false;
+let hlCurrent = 0;
+let hlBetAmount = 0;
+let hlStreak = 0;
+
+function updateChance() {
+  const val = parseInt(document.getElementById('hl-chance').value);
+  document.getElementById('hl-chance-label').textContent = val + '%';
+}
+
+function getHlMultiplier() {
+  const chance = parseInt(document.getElementById('hl-chance').value) / 100;
+  return (1 / chance).toFixed(2);
+}
+
+async function hlGuess(choice) {
+  if (!hlActive) {
+    hlBetAmount = parseInt(document.getElementById('hl-bet-input').value);
+    if (isNaN(hlBetAmount) || hlBetAmount < 10) { setStatus('hl', '❌ Мин. 10 ₽'); return; }
+    if (hlBetAmount > balance) { setStatus('hl', '❌ Недостаточно'); return; }
+
+    const ok = await apiBet(hlBetAmount);
+    if (!ok) { setStatus('hl', '❌ Ошибка ставки'); return; }
+
+    hlActive = true;
+    hlStreak = 0;
+    hlCurrent = Math.floor(Math.random() * 10) + 1;
+    document.getElementById('hl-card').textContent = hlCurrent;
+    setStatus('hl', `Ставка ${fmt(hlBetAmount)}. Коэф x${getHlMultiplier()}`);
+    return;
+  }
+
+  const next = Math.floor(Math.random() * 10) + 1;
+  document.getElementById('hl-card').textContent = next;
+
+  const isMore = next > hlCurrent;
+  const isLess = next < hlCurrent;
+  const won = (choice === 'more' && isMore) || (choice === 'less' && isLess);
+
+  if (won) {
+    hlStreak++;
+    const baseMult = parseFloat(getHlMultiplier());
+    const streakBonus = 1 + (hlStreak - 1) * 0.2;
+    const totalMult = baseMult * streakBonus;
+    const win = Math.floor(hlBetAmount * totalMult);
+
+    await apiWin(win);
+    emojiBurst('🎯', 5);
+    emojiBurst('🔥', 3);
+    flash('green');
+    if (hlStreak >= 2) showStreak(hlStreak);
+    if (hlStreak >= 3) setDanger(true);
+
+    setStatus('hl', `🎉 x${hlStreak} подряд! +${fmt(win - hlBetAmount)} (коэф x${totalMult.toFixed(2)})`);
+    tg.HapticFeedback.notificationOccurred('success');
+
+    hlCurrent = next;
+    hlBetAmount = win;
+    setTimeout(() => {
+      document.getElementById('hl-card').textContent = '?';
+    }, 1200);
+  } else {
+    hlStreak = 0;
+    setDanger(false);
+    shakeScreen();
+    flash('red');
+    emojiBurst('💀', 5);
+    setStatus('hl', `💀 Не угадал! -${fmt(hlBetAmount)}`);
+    tg.HapticFeedback.notificationOccurred('error');
+    hlActive = false;
+    hlCurrent = 0;
+    hlBetAmount = 0;
+    setTimeout(() => {
+      document.getElementById('hl-card').textContent = '?';
+    }, 1500);
+  }
+}
+
+loadBalance();
+buildGrid();
+updateChance();
+</script>
+</body>
+</html>
