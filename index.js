@@ -7,7 +7,6 @@ const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
-// Подключение к БД
 let db = null;
 if (process.env.DATABASE_URL) {
     db = new Client({ connectionString: process.env.DATABASE_URL });
@@ -18,10 +17,9 @@ if (process.env.DATABASE_URL) {
         })
         .catch(err => console.error('⚠️ Ошибка БД:', err.message));
 } else {
-    console.log('⚠️ DATABASE_URL не задан — сервер работает без БД');
+    console.log('⚠️ DATABASE_URL не задан');
 }
 
-// Создание таблиц при старте
 async function initDB() {
     if (!db) return;
     try {
@@ -39,27 +37,31 @@ async function initDB() {
                 status TEXT
             );
         `);
-        console.log('✅ Таблицы users и invoices готовы');
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS withdrawals (
+                id SERIAL PRIMARY KEY,
+                telegram_id BIGINT,
+                amount_rub INTEGER,
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+        `);
+        console.log('✅ Таблицы готовы');
     } catch (err) {
-        console.error('Ошибка создания таблиц:', err.message);
+        console.error('Ошибка таблиц:', err.message);
     }
 }
 
-// Crypto Pay
 let cryptoPay = null;
 if (process.env.CRYPTO_PAY_TOKEN) {
     cryptoPay = new CryptoPay(process.env.CRYPTO_PAY_TOKEN);
     console.log('✅ Crypto Pay подключён');
-} else {
-    console.log('⚠️ CRYPTO_PAY_TOKEN не задан');
 }
 
-// Тестовый маршрут
 app.get('/', (req, res) => {
-    res.send('Сервер работает!');
+    res.sendFile(__dirname + '/public/index.html');
 });
 
-// Баланс
 app.get('/api/balance/:userId', async (req, res) => {
     if (!db) return res.json({ balance: 10000 });
     const { userId } = req.params;
@@ -75,7 +77,6 @@ app.get('/api/balance/:userId', async (req, res) => {
     }
 });
 
-// Списать ставку
 app.post('/api/bet', async (req, res) => {
     if (!db) return res.status(500).json({ error: 'БД не подключена' });
     const { userId, amount } = req.body;
@@ -91,7 +92,6 @@ app.post('/api/bet', async (req, res) => {
     }
 });
 
-// Начислить выигрыш
 app.post('/api/win', async (req, res) => {
     if (!db) return res.status(500).json({ error: 'БД не подключена' });
     const { userId, amount } = req.body;
@@ -104,17 +104,16 @@ app.post('/api/win', async (req, res) => {
     }
 });
 
-// Пополнение
 app.post('/api/deposit', async (req, res) => {
     if (!cryptoPay) return res.status(500).json({ error: 'Crypto Pay не настроен' });
-    if (!db) return res.status(500).json({ error: 'База данных не подключена' });
+    if (!db) return res.status(500).json({ error: 'БД не подключена' });
 
     const { userId, amountRub } = req.body;
     const amountUsdt = (amountRub / 95).toFixed(2);
 
     try {
         const invoice = await cryptoPay.createInvoice('USDT', amountUsdt, {
-            description: `Пополнение баланса на ${amountRub} RUB`,
+            description: `Пополнение на ${amountRub} RUB`,
             payload: JSON.stringify({ userId, amountRub }),
             paid_btn_name: 'openBot',
             paid_btn_url: 'https://t.me/твой_бот'
@@ -132,9 +131,8 @@ app.post('/api/deposit', async (req, res) => {
     }
 });
 
-// Вывод
 app.post('/api/withdraw', async (req, res) => {
-    if (!db) return res.status(500).json({ error: 'База данных не подключена' });
+    if (!db) return res.status(500).json({ error: 'БД не подключена' });
     const { userId, amountRub } = req.body;
 
     try {
@@ -142,31 +140,32 @@ app.post('/api/withdraw', async (req, res) => {
         if (balanceRes.rows.length === 0 || balanceRes.rows[0].balance < amountRub) {
             return res.status(400).json({ error: 'Недостаточно средств' });
         }
-        res.json({ success: true, message: 'Заявка на вывод создана' });
+        await db.query('UPDATE users SET balance = balance - $1 WHERE telegram_id = $2', [amountRub, userId]);
+        await db.query(
+            'INSERT INTO withdrawals (telegram_id, amount_rub, status) VALUES ($1, $2, $3)',
+            [userId, amountRub, 'pending']
+        );
+        res.json({ success: true, message: 'Заявка создана' });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// Вебхук от Crypto Pay
 app.post('/crypto/webhook', async (req, res) => {
     if (!db) return res.sendStatus(200);
-
     const { update_type, payload } = req.body;
 
     if (update_type === 'invoice_paid') {
         try {
             const invoiceData = JSON.parse(payload.payload);
             const { userId, amountRub } = invoiceData;
-
             await db.query('UPDATE users SET balance = balance + $1 WHERE telegram_id = $2', [amountRub, userId]);
             await db.query('UPDATE invoices SET status = $1 WHERE invoice_id = $2', ['paid', payload.invoice_id]);
-            console.log(`✅ Пользователь ${userId} пополнил на ${amountRub} RUB`);
+            console.log(`✅ ${userId} пополнил на ${amountRub} RUB`);
         } catch (err) {
             console.error('Ошибка вебхука:', err);
         }
     }
-
     res.sendStatus(200);
 });
 
