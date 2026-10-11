@@ -26,12 +26,12 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
 .menu-btn:active{transform:scale(0.96)}
 .menu-btn.primary{background:linear-gradient(135deg,var(--accent) 0%,var(--accent-2) 100%);border-color:transparent}
 .section-title{color:var(--hint);font-size:12px;letter-spacing:3px;text-transform:uppercase;margin:24px 0 12px;padding-left:8px}
-.game-card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:20px;padding:20px;margin-bottom:12px;display:flex;align-items:center;gap:16px;cursor:pointer}
+.game-card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:20px;padding:16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;cursor:pointer}
 .game-card:active{transform:scale(0.98)}
-.game-icon{font-size:36px;width:60px;height:60px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.2));border-radius:16px}
+.game-icon{font-size:32px;width:56px;height:56px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.2));border-radius:16px}
 .game-info{flex:1}
-.game-name{font-size:17px;font-weight:800}
-.game-desc{font-size:13px;color:var(--hint);margin-top:3px}
+.game-name{font-size:16px;font-weight:800}
+.game-desc{font-size:12px;color:var(--hint);margin-top:3px}
 .top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .back-btn{background:var(--glass);border:1px solid var(--glass-border);color:var(--text);padding:10px 18px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .top-balance{font-size:18px;font-weight:800;background:linear-gradient(135deg,#fff,#a5b4fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -120,6 +120,28 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
 .danger-mode{animation:dangerPulse 1.5s infinite}
 .streak{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#f59e0b,#ef4444);padding:10px 24px;border-radius:20px;font-weight:900;font-size:18px;color:white;z-index:10000}
 .success-check{text-align:center;font-size:70px;margin:20px 0}
+/* Рулетка */
+.roulette-wheel{width:280px;height:280px;margin:20px auto;border-radius:50%;position:relative;border:6px solid var(--gold);box-shadow:0 0 40px rgba(245,158,11,0.5);transition:transform 4s cubic-bezier(0.17,0.67,0.12,0.99)}
+.roulette-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;background:var(--bg);border:3px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;z-index:10}
+.roulette-pointer{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:32px;z-index:20}
+/* Кости */
+.dice-row{display:flex;gap:20px;justify-content:center;margin:30px 0}
+.dice{width:80px;height:80px;background:white;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:50px;font-weight:900;color:#000;box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+.dice.rolling{animation:diceRoll 0.5s infinite}
+@keyframes diceRoll{0%{transform:rotate(0)}25%{transform:rotate(-15deg)}75%{transform:rotate(15deg)}100%{transform:rotate(0)}}
+.dice-choices{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.dice-choice{padding:16px;background:var(--glass);border:2px solid var(--glass-border);border-radius:14px;text-align:center;font-weight:900;font-size:20px;cursor:pointer}
+.dice-choice.active{border-color:var(--accent);background:rgba(99,102,241,0.2)}
+/* Краш */
+.crash-display{background:var(--glass);border:2px solid var(--glass-border);border-radius:24px;padding:40px 20px;text-align:center;margin-bottom:16px;position:relative;overflow:hidden}
+.crash-multiplier{font-size:64px;font-weight:900;background:linear-gradient(135deg,#10b981,#f59e0b,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.crash-graph{height:60px;margin-top:16px;position:relative}
+.crash-bar{position:absolute;bottom:0;left:0;height:100%;width:0%;background:linear-gradient(90deg,#10b981,#f59e0b);transition:width 0.1s;border-radius:4px}
+/* Колесо */
+.wheel-container{position:relative;width:280px;height:280px;margin:20px auto}
+.fortune-wheel{width:100%;height:100%;border-radius:50%;border:6px solid var(--gold);box-shadow:0 0 40px rgba(245,158,11,0.5);transition:transform 4s cubic-bezier(0.17,0.67,0.12,0.99);background:conic-gradient(#ef4444 0deg 45deg,#f59e0b 45deg 90deg,#10b981 90deg 135deg,#6366f1 135deg 180deg,#8b5cf6 180deg 225deg,#ec4899 225deg 270deg,#06b6d4 270deg 315deg,#84cc16 315deg 360deg)}
+.fortune-pointer{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:36px;z-index:20}
+.fortune-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:70px;height:70px;background:var(--bg);border:3px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;z-index:10;font-weight:900}
 </style>
 </head>
 <body>
@@ -138,26 +160,34 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
   <div class="section-title">Игры</div>
   <div class="game-card" onclick="openGame('mines')">
     <div class="game-icon">💣</div>
-    <div class="game-info">
-      <div class="game-name">МИНЫ</div>
-      <div class="game-desc">Открывай клетки, избегай мин</div>
-    </div>
+    <div class="game-info"><div class="game-name">МИНЫ</div><div class="game-desc">Открывай клетки, избегай мин</div></div>
   </div>
   <div class="game-card" onclick="openGame('hl')">
     <div class="game-icon">🎴</div>
-    <div class="game-info">
-      <div class="game-name">БОЛЬШЕ / МЕНЬШЕ</div>
-      <div class="game-desc">Угадай карту — забери всё</div>
-    </div>
+    <div class="game-info"><div class="game-name">БОЛЬШЕ / МЕНЬШЕ</div><div class="game-desc">Угадай карту — забери всё</div></div>
+  </div>
+  <div class="game-card" onclick="openGame('roulette')">
+    <div class="game-icon">🎡</div>
+    <div class="game-info"><div class="game-name">РУЛЕТКА</div><div class="game-desc">Крути колесо — лови множитель</div></div>
+  </div>
+  <div class="game-card" onclick="openGame('dice')">
+    <div class="game-icon">🎲</div>
+    <div class="game-info"><div class="game-name">КОСТИ</div><div class="game-desc">Угадай сумму кубиков</div></div>
+  </div>
+  <div class="game-card" onclick="openGame('crash')">
+    <div class="game-icon">📈</div>
+    <div class="game-info"><div class="game-name">КРАШ</div><div class="game-desc">Успей забрать до краха</div></div>
+  </div>
+  <div class="game-card" onclick="openGame('fortune')">
+    <div class="game-icon">🎰</div>
+    <div class="game-info"><div class="game-name">КОЛЕСО ФОРТУНЫ</div><div class="game-desc">Крути — забирай приз</div></div>
   </div>
 </div>
 
 <div class="screen" id="screen-history">
   <div class="logo" style="font-size:28px; margin-top:10px;">История</div>
   <div class="logo-sub" style="margin-bottom:20px;">Транзакции</div>
-  <div class="history-list" id="history-list">
-    <div style="text-align:center; color:var(--hint); padding:40px 0;">Пока нет операций</div>
-  </div>
+  <div class="history-list" id="history-list"><div style="text-align:center; color:var(--hint); padding:40px 0;">Пока нет операций</div></div>
 </div>
 
 <div class="screen" id="screen-profile">
@@ -175,21 +205,18 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
 <div class="screen" id="screen-admin">
   <div class="logo" style="font-size:26px; margin-top:10px;">👑 Админ <span class="admin-badge">ADMIN</span></div>
   <div class="logo-sub" style="margin-bottom:20px;">Простая панель</div>
-
   <div class="panel">
     <div class="setting-label">🎯 Общая удача игроков</div>
     <div class="setting-desc">0% = все проигрывают, 50% = честно, 100% = все выигрывают</div>
     <div style="text-align:center; font-size:32px; font-weight:900; color:#a5b4fc; margin:8px 0;" id="cfg-win-display">50%</div>
     <input type="range" class="slider" id="cfg-win" min="0" max="100" value="50" oninput="document.getElementById('cfg-win-display').textContent = this.value + '%'">
   </div>
-
   <div class="panel">
     <div class="setting-label">💣 Шанс попасть на мину</div>
     <div class="setting-desc">Чем выше — тем чаще игроки взрываются</div>
     <div style="text-align:center; font-size:32px; font-weight:900; color:#ef4444; margin:8px 0;" id="cfg-mine-display">30%</div>
     <input type="range" class="slider" id="cfg-mine" min="0" max="100" value="30" oninput="document.getElementById('cfg-mine-display').textContent = this.value + '%'">
   </div>
-
   <div class="panel">
     <div class="setting-label">👑 Мой режим</div>
     <div class="setting-desc">Когда включено — я всегда выигрываю</div>
@@ -198,7 +225,6 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
       <button class="btn small red" id="cfg-adminwin-off" onclick="setAdminWin(false)">ВЫКЛ</button>
     </div>
   </div>
-
   <div class="panel">
     <div class="setting-label">💰 Выдать себе Stars</div>
     <div class="setting-desc">Мгновенно начислит на твой баланс</div>
@@ -208,19 +234,14 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
       <button class="btn small green" onclick="giveMoney(100000)" style="flex:1; min-width:90px;">+100 000 ⭐</button>
     </div>
   </div>
-
   <button class="btn" onclick="saveAdminConfig()" style="margin-top:12px;">💾 СОХРАНИТЬ ВСЁ</button>
-
   <div class="section-title" style="margin-top:24px;">📤 Заявки на вывод</div>
   <button class="btn small" onclick="loadAdminWithdrawals()" style="margin-bottom:12px;">🔄 Обновить</button>
   <div id="withdrawals-list"></div>
 </div>
 
 <div class="screen" id="screen-mines">
-  <div class="top-bar">
-    <button class="back-btn" onclick="goMenu()">‹ Назад</button>
-    <div class="top-balance" id="mines-balance">0 ⭐</div>
-  </div>
+  <div class="top-bar"><button class="back-btn" onclick="goMenu()">‹ Назад</button><div class="top-balance" id="mines-balance">0 ⭐</div></div>
   <div class="panel">
     <div class="input-row"><label>Ставка</label><input type="number" class="input-field" id="mines-bet-input" value="10" min="1"></div>
     <div class="input-row"><label>Мины</label><input type="number" class="input-field" id="mines-count-input" value="3" min="1" max="24"></div>
@@ -231,10 +252,7 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
 </div>
 
 <div class="screen" id="screen-hl">
-  <div class="top-bar">
-    <button class="back-btn" onclick="goMenu()">‹ Назад</button>
-    <div class="top-balance" id="hl-balance">0 ⭐</div>
-  </div>
+  <div class="top-bar"><button class="back-btn" onclick="goMenu()">‹ Назад</button><div class="top-balance" id="hl-balance">0 ⭐</div></div>
   <div class="panel">
     <div class="input-row"><label>Ставка</label><input type="number" class="input-field" id="hl-bet-input" value="10" min="1"></div>
     <div style="color:var(--hint); font-size:13px; margin-bottom:6px; font-weight:600;">Шанс угадать: <b id="hl-chance-label" style="color:#a5b4fc;">50%</b></div>
@@ -247,6 +265,61 @@ body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%
     <div class="choice" onclick="hlGuess('more')">⬆️ БОЛЬШЕ</div>
   </div>
   <div class="status" id="hl-status"></div>
+</div>
+
+<div class="screen" id="screen-roulette">
+  <div class="top-bar"><button class="back-btn" onclick="goMenu()">‹ Назад</button><div class="top-balance" id="roulette-balance">0 ⭐</div></div>
+  <div class="panel">
+    <div class="input-row"><label>Ставка</label><input type="number" class="input-field" id="roulette-bet-input" value="10" min="1"></div>
+  </div>
+  <div class="roulette-wheel" id="roulette-wheel">
+    <div class="roulette-pointer">▼</div>
+    <div class="roulette-center">🎡</div>
+  </div>
+  <div class="status" id="roulette-status"></div>
+  <button class="btn" id="roulette-action" onclick="spinRoulette()">КРУТИТЬ</button>
+</div>
+
+<div class="screen" id="screen-dice">
+  <div class="top-bar"><button class="back-btn" onclick="goMenu()">‹ Назад</button><div class="top-balance" id="dice-balance">0 ⭐</div></div>
+  <div class="panel">
+    <div class="input-row"><label>Ставка</label><input type="number" class="input-field" id="dice-bet-input" value="10" min="1"></div>
+    <div style="color:var(--hint); font-size:13px; margin-bottom:8px; font-weight:600;">Выбери сумму кубиков (2-12):</div>
+    <div class="dice-choices" id="dice-choices"></div>
+  </div>
+  <div class="dice-row">
+    <div class="dice" id="dice-1">⚀</div>
+    <div class="dice" id="dice-2">⚀</div>
+  </div>
+  <div class="status" id="dice-status"></div>
+  <button class="btn" id="dice-action" onclick="rollDice()">БРОСИТЬ</button>
+</div>
+
+<div class="screen" id="screen-crash">
+  <div class="top-bar"><button class="back-btn" onclick="goMenu()">‹ Назад</button><div class="top-balance" id="crash-balance">0 ⭐</div></div>
+  <div class="panel">
+    <div class="input-row"><label>Ставка</label><input type="number" class="input-field" id="crash-bet-input" value="10" min="1"></div>
+  </div>
+  <div class="crash-display">
+    <div class="crash-multiplier" id="crash-multiplier">x1.00</div>
+    <div class="crash-graph"><div class="crash-bar" id="crash-bar"></div></div>
+  </div>
+  <div class="status" id="crash-status"></div>
+  <button class="btn green" id="crash-action" onclick="crashAction()">СТАРТ</button>
+</div>
+
+<div class="screen" id="screen-fortune">
+  <div class="top-bar"><button class="back-btn" onclick="goMenu()">‹ Назад</button><div class="top-balance" id="fortune-balance">0 ⭐</div></div>
+  <div class="panel">
+    <div class="input-row"><label>Ставка</label><input type="number" class="input-field" id="fortune-bet-input" value="10" min="1"></div>
+  </div>
+  <div class="wheel-container">
+    <div class="fortune-pointer">▼</div>
+    <div class="fortune-wheel" id="fortune-wheel"></div>
+    <div class="fortune-center" id="fortune-center">🎰</div>
+  </div>
+  <div class="status" id="fortune-status"></div>
+  <button class="btn" id="fortune-action" onclick="spinFortune()">КРУТИТЬ</button>
 </div>
 
 <div class="bottom-nav" id="bottom-nav">
@@ -326,6 +399,10 @@ function updateBalance() {
   document.getElementById('menu-balance').textContent = fmt(balance);
   document.getElementById('mines-balance').textContent = fmt(balance);
   document.getElementById('hl-balance').textContent = fmt(balance);
+  document.getElementById('roulette-balance').textContent = fmt(balance);
+  document.getElementById('dice-balance').textContent = fmt(balance);
+  document.getElementById('crash-balance').textContent = fmt(balance);
+  document.getElementById('fortune-balance').textContent = fmt(balance);
 }
 
 function animateBalance() {
@@ -366,8 +443,7 @@ async function checkAdmin() {
 
 async function apiBet(amount) {
   const res = await fetch(`${API_URL}/api/bet`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId, amount })
   });
   const data = await res.json();
@@ -377,8 +453,7 @@ async function apiBet(amount) {
 
 async function apiWin(amount) {
   const res = await fetch(`${API_URL}/api/win`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId, amount })
   });
   const data = await res.json();
@@ -435,7 +510,6 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 });
 
 let depositAmount = 50;
-
 function openDeposit() { depositAmount = 50; updateDepositUI(); openModal('modal-deposit'); }
 function setDepositAmount(v) { depositAmount = v; updateDepositUI(); }
 function syncDepositAmount(v) { const n = parseInt(v); if (!isNaN(n)) depositAmount = n; document.getElementById('deposit-amount').textContent = depositAmount + ' ⭐'; }
@@ -448,8 +522,7 @@ async function confirmDepositStars() {
   if (depositAmount < 50) { tg.showAlert('Минимум 50 Stars'); return; }
   try {
     const res = await fetch(`${API_URL}/api/create-invoice-link`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, amount: depositAmount })
     });
     const data = await res.json();
@@ -472,7 +545,6 @@ async function confirmDepositStars() {
 }
 
 let withdrawAmount = 100;
-
 function openWithdraw() { withdrawAmount = 100; updateWithdrawUI(); openModal('modal-withdraw'); }
 function setWithdrawAmount(v) { withdrawAmount = Math.min(v, balance); updateWithdrawUI(); }
 function syncWithdrawAmount(v) { const n = parseInt(v); if (!isNaN(n)) withdrawAmount = n; document.getElementById('withdraw-amount').textContent = withdrawAmount + ' ⭐'; }
@@ -486,8 +558,7 @@ async function confirmWithdrawStars() {
   if (withdrawAmount > balance) { tg.showAlert('Недостаточно средств'); return; }
   try {
     const res = await fetch(`${API_URL}/api/withdraw-stars`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, amount: withdrawAmount })
     });
     const data = await res.json();
@@ -543,17 +614,14 @@ function openGame(name) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   updateBalance();
   if (name === 'mines') buildGrid();
+  if (name === 'dice') buildDiceChoices();
 }
 
 function goMenu() { switchNav('menu'); }
 function setStatus(game, text) { document.getElementById(game + '-status').textContent = text; }
 
-let minesActive = false;
-let minesList = [];
-let minesRevealed = [];
-let minesCurrentWin = 0;
-let minesBetAmount = 0;
-let minesTotal = 0;
+// ===== МИНЫ =====
+let minesActive = false, minesList = [], minesRevealed = [], minesCurrentWin = 0, minesBetAmount = 0, minesTotal = 0;
 
 function buildGrid() {
   const grid = document.getElementById('grid');
@@ -572,21 +640,13 @@ function minesAction() { if (!minesActive) startMines(); else cashoutMines(); }
 async function startMines() {
   minesBetAmount = parseInt(document.getElementById('mines-bet-input').value);
   minesTotal = parseInt(document.getElementById('mines-count-input').value);
-
   if (isNaN(minesBetAmount) || minesBetAmount < 1) { setStatus('mines', '❌ Мин. 1 ⭐'); return; }
   if (minesBetAmount > balance) { setStatus('mines', '❌ Недостаточно'); return; }
   if (isNaN(minesTotal) || minesTotal < 1 || minesTotal > 24) { setStatus('mines', '❌ 1–24 мины'); return; }
-
   const ok = await apiBet(minesBetAmount);
   if (!ok) { setStatus('mines', '❌ Ошибка ставки'); return; }
-
-  stats.games++;
-  saveStats();
-
-  minesActive = true;
-  minesRevealed = [];
-  minesCurrentWin = minesBetAmount;
-  minesList = [];
+  stats.games++; saveStats();
+  minesActive = true; minesRevealed = []; minesCurrentWin = minesBetAmount; minesList = [];
   while (minesList.length < minesTotal) {
     const r = Math.floor(Math.random() * 25);
     if (!minesList.includes(r)) minesList.push(r);
@@ -602,22 +662,14 @@ function clickTile(i) {
   if (!minesActive || minesRevealed.includes(i)) return;
   minesRevealed.push(i);
   const tile = document.querySelector(`.tile[data-index="${i}"]`);
-
   const mineChance = parseInt(settings['mines.mine_chance'] || 30);
   const adminAlwaysWin = settings['admin.always_win'] === 'on';
-
   const realMine = minesList.includes(i);
   let treatAsMine = realMine;
-
-  if (isAdmin && adminAlwaysWin) {
-    treatAsMine = false;
-  } else if (!isAdmin) {
-    treatAsMine = Math.random() * 100 < mineChance;
-  }
-
+  if (isAdmin && adminAlwaysWin) treatAsMine = false;
+  else if (!isAdmin) treatAsMine = Math.random() * 100 < mineChance;
   if (treatAsMine) {
-    tile.classList.add('mine');
-    tile.textContent = '💣';
+    tile.classList.add('mine'); tile.textContent = '💣';
     minesActive = false;
     minesList.forEach(m => {
       const t = document.querySelector(`.tile[data-index="${m}"]`);
@@ -631,8 +683,7 @@ function clickTile(i) {
     btn.classList.remove('green');
     tg.HapticFeedback.impactOccurred('heavy');
   } else {
-    tile.classList.add('diamond');
-    tile.textContent = '💎';
+    tile.classList.add('diamond'); tile.textContent = '💎';
     const rect = tile.getBoundingClientRect();
     emojiBurst('💎', 3, rect.left + rect.width / 2, rect.top);
     flash('green');
@@ -658,20 +709,15 @@ async function cashoutMines() {
     setTimeout(() => {
       const t = document.querySelector(`.tile[data-index="${m}"]`);
       if (t && !minesRevealed.includes(m)) {
-        t.classList.add('mine', 'revealed-mine');
-        t.textContent = '💣';
+        t.classList.add('mine', 'revealed-mine'); t.textContent = '💣';
         tg.HapticFeedback.impactOccurred('light');
       }
     }, idx * 150);
   });
   await new Promise(r => setTimeout(r, minesList.length * 150 + 400));
   await apiWin(minesCurrentWin);
-  emojiBurst('🎉', 10);
-  emojiBurst('💰', 5);
-  flash('green');
-  setDanger(false);
-  stats.wins++;
-  saveStats();
+  emojiBurst('🎉', 10); emojiBurst('💰', 5); flash('green'); setDanger(false);
+  stats.wins++; saveStats();
   setStatus('mines', `✅ Выигрыш ${fmt(minesCurrentWin)} | Мин было: ${minesTotal}`);
   addHistory('in', 'Мины — выигрыш', minesCurrentWin);
   minesActive = false;
@@ -681,10 +727,8 @@ async function cashoutMines() {
   tg.HapticFeedback.notificationOccurred('success');
 }
 
-let hlActive = false;
-let hlCurrent = 0;
-let hlBetAmount = 0;
-let hlStreak = 0;
+// ===== БОЛЬШЕ / МЕНЬШЕ =====
+let hlActive = false, hlCurrent = 0, hlBetAmount = 0, hlStreak = 0;
 
 function updateChance() {
   const val = parseInt(document.getElementById('hl-chance').value);
@@ -701,73 +745,273 @@ async function hlGuess(choice) {
     hlBetAmount = parseInt(document.getElementById('hl-bet-input').value);
     if (isNaN(hlBetAmount) || hlBetAmount < 1) { setStatus('hl', '❌ Мин. 1 ⭐'); return; }
     if (hlBetAmount > balance) { setStatus('hl', '❌ Недостаточно'); return; }
-
     const ok = await apiBet(hlBetAmount);
     if (!ok) { setStatus('hl', '❌ Ошибка ставки'); return; }
-
-    stats.games++;
-    saveStats();
-
-    hlActive = true;
-    hlStreak = 0;
+    stats.games++; saveStats();
+    hlActive = true; hlStreak = 0;
     hlCurrent = Math.floor(Math.random() * 10) + 1;
     document.getElementById('hl-card').textContent = hlCurrent;
     setStatus('hl', `Ставка ${fmt(hlBetAmount)}. Коэф x${getHlMultiplier()}`);
     return;
   }
-
   const next = Math.floor(Math.random() * 10) + 1;
   document.getElementById('hl-card').textContent = next;
-
-  const isMore = next > hlCurrent;
-  const isLess = next < hlCurrent;
+  const isMore = next > hlCurrent, isLess = next < hlCurrent;
   let won = (choice === 'more' && isMore) || (choice === 'less' && isLess);
-
   const winChance = parseInt(settings['game.win_chance'] || 50);
   const adminAlwaysWin = settings['admin.always_win'] === 'on';
-  if (isAdmin && adminAlwaysWin) {
-    won = true;
-  } else if (!isAdmin) {
+  if (isAdmin && adminAlwaysWin) won = true;
+  else if (!isAdmin) {
     if (won && Math.random() * 100 > winChance) won = false;
     if (!won && Math.random() * 100 < winChance) won = true;
   }
-
   if (won) {
     hlStreak++;
-    const baseMult = parseFloat(getHlMultiplier());
-    const streakBonus = 1 + (hlStreak - 1) * 0.2;
-    const totalMult = baseMult * streakBonus;
+    const totalMult = parseFloat(getHlMultiplier()) * (1 + (hlStreak - 1) * 0.2);
     const win = Math.floor(hlBetAmount * totalMult);
-
     await apiWin(win);
-    emojiBurst('🎯', 5);
-    emojiBurst('🔥', 3);
-    flash('green');
+    emojiBurst('🎯', 5); emojiBurst('🔥', 3); flash('green');
     if (hlStreak >= 2) showStreak(hlStreak);
     if (hlStreak >= 3) setDanger(true);
-
-    setStatus('hl', `🎉 x${hlStreak} подряд! +${fmt(win - hlBetAmount)} (коэф x${totalMult.toFixed(2)})`);
+    setStatus('hl', `🎉 x${hlStreak} подряд! +${fmt(win - hlBetAmount)}`);
     tg.HapticFeedback.notificationOccurred('success');
-
-    hlCurrent = next;
-    hlBetAmount = win;
+    hlCurrent = next; hlBetAmount = win;
     setTimeout(() => { document.getElementById('hl-card').textContent = '?'; }, 1200);
   } else {
-    hlStreak = 0;
-    setDanger(false);
-    shakeScreen();
-    flash('red');
-    emojiBurst('💀', 5);
+    hlStreak = 0; setDanger(false); shakeScreen(); flash('red'); emojiBurst('💀', 5);
     setStatus('hl', `💀 Не угадал! -${fmt(hlBetAmount)}`);
     addHistory('out', 'Больше/Меньше — проигрыш', hlBetAmount);
     tg.HapticFeedback.notificationOccurred('error');
-    hlActive = false;
-    hlCurrent = 0;
-    hlBetAmount = 0;
+    hlActive = false; hlCurrent = 0; hlBetAmount = 0;
     setTimeout(() => { document.getElementById('hl-card').textContent = '?'; }, 1500);
   }
 }
 
+// ===== РУЛЕТКА =====
+const roulettePrizes = [0, 1.5, 0, 2, 0, 3, 0, 5];
+const rouletteColors = ['#ef4444','#f59e0b','#ef4444','#10b981','#ef4444','#6366f1','#ef4444','#8b5cf6'];
+let rouletteSpinning = false;
+
+async function spinRoulette() {
+  if (rouletteSpinning) return;
+  const bet = parseInt(document.getElementById('roulette-bet-input').value);
+  if (isNaN(bet) || bet < 1) { setStatus('roulette', '❌ Мин. 1 ⭐'); return; }
+  if (bet > balance) { setStatus('roulette', '❌ Недостаточно'); return; }
+  const ok = await apiBet(bet);
+  if (!ok) { setStatus('roulette', '❌ Ошибка ставки'); return; }
+  stats.games++; saveStats();
+  rouletteSpinning = true;
+  setStatus('roulette', '🎡 Крутится...');
+  const idx = Math.floor(Math.random() * roulettePrizes.length);
+  const prize = roulettePrizes[idx];
+  const rotation = 360 * 5 + (360 / roulettePrizes.length) * idx + Math.random() * 30;
+  const wheel = document.getElementById('roulette-wheel');
+  wheel.style.transform = `rotate(${rotation}deg)`;
+  setTimeout(async () => {
+    if (prize > 0) {
+      const win = Math.floor(bet * prize);
+      await apiWin(win);
+      emojiBurst('🎉', 8); flash('green');
+      setStatus('roulette', `🎉 Выигрыш x${prize} = ${fmt(win)}!`);
+      addHistory('in', `Рулетка x${prize}`, win);
+      stats.wins++; saveStats();
+      tg.HapticFeedback.notificationOccurred('success');
+    } else {
+      shakeScreen(); flash('red'); emojiBurst('💀', 5);
+      setStatus('roulette', `💀 Проигрыш ${fmt(bet)}`);
+      addHistory('out', 'Рулетка — проигрыш', bet);
+      tg.HapticFeedback.notificationOccurred('error');
+    }
+    rouletteSpinning = false;
+    wheel.style.transition = 'none';
+    wheel.style.transform = 'rotate(0deg)';
+    setTimeout(() => wheel.style.transition = 'transform 4s cubic-bezier(0.17,0.67,0.12,0.99)', 50);
+  }, 4100);
+}
+
+// ===== КОСТИ =====
+let diceChoice = 7;
+
+function buildDiceChoices() {
+  const c = document.getElementById('dice-choices');
+  c.innerHTML = '';
+  for (let i = 2; i <= 12; i++) {
+    const d = document.createElement('div');
+    d.className = 'dice-choice' + (i === diceChoice ? ' active' : '');
+    d.textContent = i;
+    d.onclick = () => {
+      diceChoice = i;
+      document.querySelectorAll('.dice-choice').forEach(x => x.classList.remove('active'));
+      d.classList.add('active');
+    };
+    c.appendChild(d);
+  }
+}
+
+const diceEmojis = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+async function rollDice() {
+  const bet = parseInt(document.getElementById('dice-bet-input').value);
+  if (isNaN(bet) || bet < 1) { setStatus('dice', '❌ Мин. 1 ⭐'); return; }
+  if (bet > balance) { setStatus('dice', '❌ Недостаточно'); return; }
+  const ok = await apiBet(bet);
+  if (!ok) { setStatus('dice', '❌ Ошибка ставки'); return; }
+  stats.games++; saveStats();
+  const d1 = document.getElementById('dice-1'), d2 = document.getElementById('dice-2');
+  d1.classList.add('rolling'); d2.classList.add('rolling');
+  setStatus('dice', '🎲 Бросаем...');
+  let ticks = 0;
+  const interval = setInterval(() => {
+    d1.textContent = diceEmojis[Math.floor(Math.random() * 6)];
+    d2.textContent = diceEmojis[Math.floor(Math.random() * 6)];
+    ticks++;
+    if (ticks > 12) {
+      clearInterval(interval);
+      d1.classList.remove('rolling'); d2.classList.remove('rolling');
+      finishDice(bet);
+    }
+  }, 100);
+}
+
+async function finishDice(bet) {
+  let r1 = Math.floor(Math.random() * 6) + 1;
+  let r2 = Math.floor(Math.random() * 6) + 1;
+  const winChance = parseInt(settings['game.win_chance'] || 50);
+  const adminAlwaysWin = settings['admin.always_win'] === 'on';
+  const sum = r1 + r2;
+  let won = sum === diceChoice;
+  if (isAdmin && adminAlwaysWin) { won = true; }
+  else if (!isAdmin) {
+    if (won && Math.random() * 100 > winChance) won = false;
+    if (!won && Math.random() * 100 < winChance) {
+      // подкрутка: делаем так, чтобы сумма совпала
+      const diff = diceChoice - r2;
+      if (diff >= 1 && diff <= 6) r1 = diff;
+      won = true;
+    }
+  }
+  document.getElementById('dice-1').textContent = diceEmojis[r1 - 1];
+  document.getElementById('dice-2').textContent = diceEmojis[r2 - 1];
+  const finalSum = r1 + r2;
+  if (won && finalSum === diceChoice) {
+    const mult = Math.max(2, Math.floor(36 / (6 - Math.abs(7 - diceChoice) + 1)));
+    const win = Math.floor(bet * mult);
+    await apiWin(win);
+    emojiBurst('🎲', 8); flash('green');
+    setStatus('dice', `🎉 Совпало! +${fmt(win)}`);
+    addHistory('in', 'Кости — выигрыш', win);
+    stats.wins++; saveStats();
+    tg.HapticFeedback.notificationOccurred('success');
+  } else {
+    shakeScreen(); flash('red'); emojiBurst('💀', 5);
+    setStatus('dice', `💀 Выпало ${finalSum}, не ${diceChoice}. -${fmt(bet)}`);
+    addHistory('out', 'Кости — проигрыш', bet);
+    tg.HapticFeedback.notificationOccurred('error');
+  }
+}
+
+// ===== КРАШ =====
+let crashActive = false, crashMult = 1, crashBet = 0, crashInterval = null;
+
+async function crashAction() {
+  if (!crashActive) {
+    crashBet = parseInt(document.getElementById('crash-bet-input').value);
+    if (isNaN(crashBet) || crashBet < 1) { setStatus('crash', '❌ Мин. 1 ⭐'); return; }
+    if (crashBet > balance) { setStatus('crash', '❌ Недостаточно'); return; }
+    const ok = await apiBet(crashBet);
+    if (!ok) { setStatus('crash', '❌ Ошибка ставки'); return; }
+    stats.games++; saveStats();
+    crashActive = true; crashMult = 1;
+    document.getElementById('crash-multiplier').textContent = 'x1.00';
+    document.getElementById('crash-bar').style.width = '0%';
+    setStatus('crash', '📈 Летит! Забирай до краха');
+    document.getElementById('crash-action').textContent = '💰 ЗАБРАТЬ';
+    document.getElementById('crash-action').classList.add('green');
+    const winChance = parseInt(settings['game.win_chance'] || 50);
+    const adminAlwaysWin = settings['admin.always_win'] === 'on';
+    let crashPoint;
+    if (isAdmin && adminAlwaysWin) crashPoint = 99;
+    else {
+      const r = Math.random() * 100;
+      if (r < winChance) crashPoint = 99; // не крашится сразу
+      else crashPoint = 1 + Math.random() * 3;
+    }
+    crashInterval = setInterval(async () => {
+      crashMult += 0.05 + Math.random() * 0.1;
+      document.getElementById('crash-multiplier').textContent = 'x' + crashMult.toFixed(2);
+      document.getElementById('crash-bar').style.width = Math.min(100, (crashMult - 1) * 20) + '%';
+      if (crashMult >= crashPoint) {
+        clearInterval(crashInterval);
+        crashActive = false;
+        shakeScreen(); flash('red'); emojiBurst('💥', 8);
+        setStatus('crash', `💥 Краш на x${crashMult.toFixed(2)}! Потеряно ${fmt(crashBet)}`);
+        addHistory('out', 'Краш — проигрыш', crashBet);
+        document.getElementById('crash-action').textContent = 'СТАРТ';
+        document.getElementById('crash-action').classList.remove('green');
+        tg.HapticFeedback.notificationOccurred('error');
+      }
+    }, 100);
+  } else {
+    clearInterval(crashInterval);
+    crashActive = false;
+    const win = Math.floor(crashBet * crashMult);
+    await apiWin(win);
+    emojiBurst('🎉', 8); emojiBurst('💰', 5); flash('green');
+    setStatus('crash', `✅ Забрал x${crashMult.toFixed(2)} = ${fmt(win)}!`);
+    addHistory('in', 'Краш — выигрыш', win);
+    stats.wins++; saveStats();
+    document.getElementById('crash-action').textContent = 'СТАРТ';
+    document.getElementById('crash-action').classList.remove('green');
+    tg.HapticFeedback.notificationOccurred('success');
+  }
+}
+
+// ===== КОЛЕСО ФОРТУНЫ =====
+const fortunePrizes = [0, 1.5, 2, 0, 3, 1.5, 0, 5, 0, 2, 1.5, 10];
+let fortuneSpinning = false;
+
+async function spinFortune() {
+  if (fortuneSpinning) return;
+  const bet = parseInt(document.getElementById('fortune-bet-input').value);
+  if (isNaN(bet) || bet < 1) { setStatus('fortune', '❌ Мин. 1 ⭐'); return; }
+  if (bet > balance) { setStatus('fortune', '❌ Недостаточно'); return; }
+  const ok = await apiBet(bet);
+  if (!ok) { setStatus('fortune', '❌ Ошибка ставки'); return; }
+  stats.games++; saveStats();
+  fortuneSpinning = true;
+  setStatus('fortune', '🎰 Крутится...');
+  const idx = Math.floor(Math.random() * fortunePrizes.length);
+  const prize = fortunePrizes[idx];
+  const rotation = 360 * 5 + (360 / fortunePrizes.length) * idx + Math.random() * 15;
+  const wheel = document.getElementById('fortune-wheel');
+  wheel.style.transform = `rotate(${rotation}deg)`;
+  document.getElementById('fortune-center').textContent = 'x' + prize;
+  setTimeout(async () => {
+    if (prize > 0) {
+      const win = Math.floor(bet * prize);
+      await apiWin(win);
+      emojiBurst('🎉', 8); emojiBurst('💰', 5); flash('green');
+      setStatus('fortune', `🎉 Выигрыш x${prize} = ${fmt(win)}!`);
+      addHistory('in', `Колесо x${prize}`, win);
+      stats.wins++; saveStats();
+      tg.HapticFeedback.notificationOccurred('success');
+    } else {
+      shakeScreen(); flash('red'); emojiBurst('💀', 5);
+      setStatus('fortune', `💀 Пусто. -${fmt(bet)}`);
+      addHistory('out', 'Колесо — проигрыш', bet);
+      tg.HapticFeedback.notificationOccurred('error');
+    }
+    fortuneSpinning = false;
+    setTimeout(() => {
+      wheel.style.transition = 'none';
+      wheel.style.transform = 'rotate(0deg)';
+      document.getElementById('fortune-center').textContent = '🎰';
+      setTimeout(() => wheel.style.transition = 'transform 4s cubic-bezier(0.17,0.67,0.12,0.99)', 50);
+    }, 1500);
+  }, 4100);
+}
+
+// ===== АДМИНКА =====
 let adminConfig = {};
 
 async function loadAdminConfig() {
@@ -799,8 +1043,7 @@ async function saveAdminConfig() {
   adminConfig['mines.mine_chance'] = document.getElementById('cfg-mine').value;
   try {
     const res = await fetch(`${API_URL}/api/admin/config`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ adminId: userId, config: adminConfig })
     });
     const data = await res.json();
@@ -814,8 +1057,7 @@ async function saveAdminConfig() {
 async function giveMoney(amount) {
   try {
     const res = await fetch(`${API_URL}/api/admin/give-money`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ adminId: userId, amount })
     });
     const data = await res.json();
@@ -857,8 +1099,7 @@ async function loadAdminWithdrawals() {
 async function setWithdrawalStatus(id, status) {
   try {
     const res = await fetch(`${API_URL}/api/admin/withdrawal-status`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ adminId: userId, withdrawalId: id, status })
     });
     const data = await res.json();
@@ -874,6 +1115,7 @@ async function setWithdrawalStatus(id, status) {
   await loadBalance();
   await checkAdmin();
   buildGrid();
+  buildDiceChoices();
   updateChance();
   renderHistory();
 })();
